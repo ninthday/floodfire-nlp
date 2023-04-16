@@ -4,11 +4,13 @@ version = "0.1.0"
 description = ""
 authors = ["Tuvix Shih <tuvix@beehivedt.com>"]
 readme = "README.md"
-packages = [{include = "floodfire_nlp"}]
+packages = [{include = "floodfire-nlp"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 jieba = "^0.42.1"
+lxml = "^4.9.2"
+demoji = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
