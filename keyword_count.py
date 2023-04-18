@@ -4,6 +4,7 @@ import csv
 import jieba
 import demoji
 import re
+from argparse import ArgumentParser
 from configparser import ConfigParser
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -59,13 +60,32 @@ def remove_stopword(stopword_list: list, seged_list: list) -> list:
 
 
 if __name__ == "__main__":
+    parser = ArgumentParser(
+        description="CrowdTangle Project Posts Daily Keyword"
+    )
+    parser.add_argument(
+        "-p",
+        "--project",
+        help="Project Id",
+        type=int,
+        dest="project_id",
+        required=True,
+    )
+    parser.add_argument(
+        "--start-date", help="Search start date", dest="start_date"
+    )
+    parser.add_argument("--end-date", help="Search end date", dest="end_date")
+    args = parser.parse_args()
+
+    project_id = args.project_id
+    start_date = args.start_date
+    end_date = args.end_date
+
     dir_path = Path(__file__).resolve().parent
     config = ConfigParser()
     config.read("{}/config.ini".format(dir_path))
 
-    start_date = "2023-04-03"
-    end_date = "2023-04-07"
-    output_file = "outfile/p48_posts.csv"
+    output_file = "outfile/p{}_keywords.csv".format(project_id)
 
     # 修改預設詞典
     jieba.set_dictionary("dict/dict.txt.big")
@@ -84,7 +104,9 @@ if __name__ == "__main__":
     while start_dt <= end_dt:
         print(start_dt.strftime("%Y-%m-%d"))
 
-        posts = storage.get_crowdtangle_posts(48, start_dt.strftime("%Y-%m-%d"))
+        posts = storage.get_crowdtangle_posts(
+            project_id, start_dt.strftime("%Y-%m-%d")
+        )
 
         cntr = Counter([])
         for post in posts:
