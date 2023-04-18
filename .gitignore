@@ -128,5 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# ini config file
+*.ini
+
 /data
 /outfile
