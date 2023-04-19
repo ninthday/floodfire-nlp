@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 
 import csv
-import jieba
-import demoji
 import re
 from argparse import ArgumentParser
+from collections import Counter
 from configparser import ConfigParser
 from datetime import datetime, timedelta
 from pathlib import Path
-from collections import Counter
+
+import demoji
+import jieba
 from lxml.html import fromstring
+
 from floodfire.storage.mariadb import FloodfireStorage
 
 
-# 創建停用詞list
+# 創建停用詞 list
 def stopwords_list(filepath: str) -> list:
     stopwords = [
         line.strip()
@@ -59,6 +61,24 @@ def remove_stopword(stopword_list: list, seged_list: list) -> list:
     return proced_sentence
 
 
+def proc_words_list(stopword_list: list, seged_list: list) -> list:
+    rtn_words_list = []
+
+    for seged_word in seged_list:
+        # 去除停用字
+        if seged_word in stopword_list:
+            continue
+        # 去除空白
+        if seged_word == " ":
+            continue
+        # 去除數字
+        if seged_word.isdigit():
+            continue
+        rtn_words_list.append(seged_word)
+
+    return rtn_words_list
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(
         description="CrowdTangle Project Posts Daily Keyword"
@@ -91,7 +111,7 @@ if __name__ == "__main__":
     jieba.set_dictionary("dict/dict.txt.big")
     # 載入自定義詞典
     jieba.load_userdict("dict/user_dict.txt")
-    # 載入停用字
+    # 載入停用字字典
     stopwords = stopwords_list("dict/stop_words_zh.txt")
 
     storage = FloodfireStorage(config)
@@ -117,17 +137,20 @@ if __name__ == "__main__":
             orig_sentance = orig_sentance.replace("　", "")
             # 移除 emojii
             demoji_sentence = remove_emojii(orig_sentance)
-            # 如果程序處理完變成空字串則直接跳過
+            # 如果上述程序處理完已經變成空字串則直接跳過
             if len(demoji_sentence) == 0:
                 continue
             # 移除 HTML Tag
             notag_sentance = remove_htmltag(demoji_sentence)
             # 移除 http, https url 連結
             nolink_sentance = remove_link(notag_sentance)
+            # 如果上述程序處理完已經變成空字串則直接跳過
+            if len(nolink_sentance) == 0:
+                continue
             seged_words = jieba.lcut(nolink_sentance, cut_all=False, HMM=True)
-            # TODO：移除數字
 
-            proced_sentence = remove_stopword(stopwords, seged_words)
+            # 逐字處理程序，移除停用字、文字型數字、半形空白
+            proced_sentence = proc_words_list(stopwords, seged_words)
             cntr.update(proced_sentence)
 
         # proced_sentence_list.append(proced_sentence)
