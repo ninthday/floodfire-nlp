@@ -124,10 +124,10 @@ if __name__ == "__main__":
             notag_sentance = remove_htmltag(demoji_sentence)
             # 移除 http, https url 連結
             nolink_sentance = remove_link(notag_sentance)
-            seged_sentence = jieba.lcut(
-                nolink_sentance, cut_all=False, HMM=True
-            )
-            proced_sentence = remove_stopword(stopwords, seged_sentence)
+            seged_words = jieba.lcut(nolink_sentance, cut_all=False, HMM=True)
+            # TODO：移除數字
+
+            proced_sentence = remove_stopword(stopwords, seged_words)
             cntr.update(proced_sentence)
 
         # proced_sentence_list.append(proced_sentence)
