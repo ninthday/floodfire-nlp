@@ -60,6 +60,23 @@ class FloodfireStorage:
             return False
         return data
 
+    def get_ct_posts(self, project_id: int, pid: int):
+        try:
+            sql = "SELECT `message`, `description` FROM `p{}_posts` \
+                WHERE `pid`={}".format(
+                project_id, pid
+            )
+            self.cur.execute(sql)
+            data = self.cur.fetchall()
+        except MySQLdb._exceptions.OperationalError as e:
+            print("Error! Insert weatherbox error!")
+            print(e.args[0], e.args[1])
+            return False
+        except Exception as err:
+            print("Error! Insert weatherbox error! {}".format(err))
+            return False
+        return data
+
     def __del__(self):
         self.cur.close()
         self.conn.close()
