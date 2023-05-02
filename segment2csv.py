@@ -52,6 +52,13 @@ def remove_link(sentance: str) -> str:
     return nolink_sentance
 
 
+def remove_punctuation(sentance: str) -> str:
+    # 移除 http, https url 連結
+    nopun_sentance = re.sub(r"[.,\"'-?:!;]", "", sentance)
+    # print(nolink_sentance)
+    return nopun_sentance
+
+
 def remove_stopword(stopword_list: list, seged_list: list) -> list:
     proced_sentence = []
     for seged_word in seged_list:
@@ -136,6 +143,8 @@ if __name__ == "__main__":
         notag_sentance = remove_htmltag(demoji_sentence)
         # 移除 http, https url 連結
         nolink_sentance = remove_link(notag_sentance)
+        # 移除標點符號
+        nopun_sentance = remove_punctuation(nolink_sentance)
         # 如果上述程序處理完已經變成空字串則直接跳過
         if len(nolink_sentance) == 0:
             continue
