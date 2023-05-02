@@ -27,7 +27,7 @@ def concat_sentance(post: list) -> str:
     if post["message"] is not None:
         sentance += post["message"].strip()
     if post["description"] is not None:
-        sentance += post["description"].strip()
+        sentance += " " + post["description"].strip()
     return sentance
 
 
@@ -48,7 +48,7 @@ def remove_link(sentance: str) -> str:
     # 移除 http, https url 連結
     # nolink_sentance = re.sub(r"http[s]?://\S+", "", sentance)
     nolink_sentance = re.sub(
-        r"(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)",
+        r"(https|http)?:\/\/(\w|\.|\/|\?|\=|\&|\%)*\b",
         "",
         sentance,
     )
