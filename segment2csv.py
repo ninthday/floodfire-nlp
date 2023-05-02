@@ -3,7 +3,6 @@
 import csv
 import re
 from argparse import ArgumentParser
-from collections import Counter
 from configparser import ConfigParser
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -105,8 +104,6 @@ if __name__ == "__main__":
     config = ConfigParser()
     config.read("{}/config.ini".format(dir_path))
 
-    output_file = "outfile/p{}_keywords.csv".format(project_id)
-
     # 修改預設詞典
     jieba.set_dictionary("dict/dict.txt.big")
     # 載入自定義詞典
@@ -119,68 +116,41 @@ if __name__ == "__main__":
     start_dt = datetime.strptime(start_date, "%Y-%m-%d")
     end_dt = datetime.strptime(end_date, "%Y-%m-%d")
 
-    proced_result = dict()
+    posts = storage.get_ct_period_posts(project_id, start_date, end_date)
 
-    while start_dt <= end_dt:
-        print(start_dt.strftime("%Y-%m-%d"))
+    segmented_posts = []
 
-        posts = storage.get_ct_singleday_posts(
-            project_id, start_dt.strftime("%Y-%m-%d")
-        )
+    i = 1
+    for post in posts:
+        orig_sentance = concat_sentance(post)
+        # 移除換行符號
+        orig_sentance = orig_sentance.replace("\r", "").replace("\n", "")
+        # 移除全形空白
+        orig_sentance = orig_sentance.replace("　", "")
+        # 移除 emojii
+        demoji_sentence = remove_emojii(orig_sentance)
+        # 如果上述程序處理完已經變成空字串則直接跳過
+        if len(demoji_sentence) == 0:
+            continue
+        # 移除 HTML Tag
+        notag_sentance = remove_htmltag(demoji_sentence)
+        # 移除 http, https url 連結
+        nolink_sentance = remove_link(notag_sentance)
+        # 如果上述程序處理完已經變成空字串則直接跳過
+        if len(nolink_sentance) == 0:
+            continue
+        seged_words = jieba.lcut(nolink_sentance, cut_all=False, HMM=True)
 
-        cntr = Counter([])
-        for post in posts:
-            orig_sentance = concat_sentance(post)
-            # 移除換行符號
-            orig_sentance = orig_sentance.replace("\r", "").replace("\n", "")
-            # 移除全形空白
-            orig_sentance = orig_sentance.replace("　", "")
-            # 移除 emojii
-            demoji_sentence = remove_emojii(orig_sentance)
-            # 如果上述程序處理完已經變成空字串則直接跳過
-            if len(demoji_sentence) == 0:
-                continue
-            # 移除 HTML Tag
-            notag_sentance = remove_htmltag(demoji_sentence)
-            # 移除 http, https url 連結
-            nolink_sentance = remove_link(notag_sentance)
-            # 如果上述程序處理完已經變成空字串則直接跳過
-            if len(nolink_sentance) == 0:
-                continue
-            seged_words = jieba.lcut(nolink_sentance, cut_all=False, HMM=True)
+        # 逐字處理程序，移除停用字、文字型數字、半形空白
+        proced_sentence = proc_words_list(stopwords, seged_words)
 
-            # 逐字處理程序，移除停用字、文字型數字、半形空白
-            proced_sentence = proc_words_list(stopwords, seged_words)
-            cntr.update(proced_sentence)
+        segmented_posts.append(proced_sentence)
 
-        # proced_sentence_list.append(proced_sentence)
+        print("Segmented Post: {}".format(i))
+        i += 1
 
-        # print("|".join(proced_sentence))
-        proced_result[start_dt.strftime("%Y-%m-%d")] = cntr.most_common(50)
-        start_dt = start_dt + timedelta(days=1)
-
-    # print(proced_result)
-    # 初始化空陣列
-    rows = list()
-    for i in range(50):
-        rows.append(list())
-
-    column_name = []
-
-    for key, value in proced_result.items():
-        column_name.append(key)
-        column_name.append(" ")
-        i = 0
-        for word_cnt in value:
-            rows[i].append(word_cnt[0])
-            rows[i].append(word_cnt[1])
-            i += 1
-
+    output_file = "outfile/p{}_segmented.csv".format(project_id)
     with open(output_file, "w", newline="") as writefile:
-        # 建立 CSV 檔寫入器
         writer = csv.writer(writefile)
-        writer.writerow(column_name)
-        for row in rows:
-            writer.writerow(row)
-    print(column_name)
-    print(rows)
+        for segmented_post in segmented_posts:
+            writer.writerow(segmented_post)
