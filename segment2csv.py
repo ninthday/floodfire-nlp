@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
         segmented_posts.append(proced_sentence)
 
-        if (i % 2000) == 1:
+        if (i % 1000) == 1:
             print("Segmented Post: {}".format(i))
         i += 1
 

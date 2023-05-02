@@ -143,7 +143,7 @@ if __name__ == "__main__":
             # 移除 emojii
             demoji_sentence = remove_emojii(orig_sentance)
             # 如果上述程序處理完已經變成空字串則直接跳過
-            if len(demoji_sentence) == 0:
+            if len(demoji_sentence.strip()) == 0:
                 continue
             # 移除 HTML Tag
             notag_sentance = remove_htmltag(demoji_sentence)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
                 str.maketrans("", "", punctuation)
             )
             # 如果上述程序處理完已經變成空字串則直接跳過
-            if len(nopun_sentance) == 0:
+            if len(nopun_sentance.strip()) == 0:
                 continue
             seged_words = jieba.lcut(nopun_sentance, cut_all=False, HMM=True)
 
