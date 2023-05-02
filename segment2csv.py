@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 from datetime import datetime, timedelta
 from pathlib import Path
+from string import punctuation
 
 import demoji
 import jieba
@@ -50,13 +51,6 @@ def remove_link(sentance: str) -> str:
     nolink_sentance = re.sub(r"http[s]?://\S+", "", sentance)
     # print(nolink_sentance)
     return nolink_sentance
-
-
-def remove_punctuation(sentance: str) -> str:
-    # 移除 http, https url 連結
-    nopun_sentance = re.sub(r"[.,\"'-?:!;]", "", sentance)
-    # print(nolink_sentance)
-    return nopun_sentance
 
 
 def remove_stopword(stopword_list: list, seged_list: list) -> list:
@@ -144,7 +138,9 @@ if __name__ == "__main__":
         # 移除 http, https url 連結
         nolink_sentance = remove_link(notag_sentance)
         # 移除標點符號
-        nopun_sentance = remove_punctuation(nolink_sentance)
+        nopun_sentance = nolink_sentance.translate(
+            str.maketrans("", "", punctuation)
+        )
         # 如果上述程序處理完已經變成空字串則直接跳過
         if len(nolink_sentance) == 0:
             continue
