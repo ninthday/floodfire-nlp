@@ -132,4 +132,5 @@ dmypy.json
 *.ini
 
 /data
-/outfile
+/outfile/*
+/trained-model/*
