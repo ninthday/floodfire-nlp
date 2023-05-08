@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
 import csv
-import re
 from argparse import ArgumentParser
 from configparser import ConfigParser
 from datetime import datetime, timedelta
 from pathlib import Path
-from string import punctuation
 
-import demoji
 import jieba
-from lxml.html import fromstring
 
+from floodfire.process.preprocessing import DataPreProcessing
 from floodfire.storage.mariadb import FloodfireStorage
 
 
@@ -31,30 +28,6 @@ def concat_sentance(post: list) -> str:
     if post["description"] is not None:
         sentance += " " + post["description"].strip()
     return sentance
-
-
-def remove_emojii(sentance: str) -> str:
-    # 去除 emojii
-    demoji_sentence = demoji.replace(sentance, "")
-    return demoji_sentence
-
-
-def remove_htmltag(sentance: str) -> str:
-    # 移除 HTML tag
-    notag_sentance = fromstring(sentance).text_content()
-    # print(notag_sentance)
-    return notag_sentance
-
-
-def remove_link(sentance: str) -> str:
-    # 移除 http, https url 連結
-    nolink_sentance = re.sub(
-        r"(https|http)?:\/\/(\w|\.|\/|\?|\=|\&|\%)*\b",
-        "",
-        sentance,
-    )
-    # print(nolink_sentance)
-    return nolink_sentance
 
 
 def remove_stopword(stopword_list: list, seged_list: list) -> list:
@@ -117,6 +90,7 @@ if __name__ == "__main__":
     stopwords = stopwords_list("dict/stop_words_zh.txt")
 
     storage = FloodfireStorage(config)
+    pre_proc = DataPreProcessing()
 
     start_dt = datetime.strptime(start_date, "%Y-%m-%d")
     end_dt = datetime.strptime(end_date, "%Y-%m-%d")
@@ -129,22 +103,20 @@ if __name__ == "__main__":
     for post in posts:
         orig_sentance = concat_sentance(post)
         # 移除換行符號
-        orig_sentance = orig_sentance.replace("\r", "").replace("\n", "")
+        orig_sentance = pre_proc.remove_eol(orig_sentance)
         # 移除全形空白
-        orig_sentance = orig_sentance.replace("　", "")
+        orig_sentance = pre_proc.remove_fullwidth_space(orig_sentance)
         # 移除 emojii
-        demoji_sentence = remove_emojii(orig_sentance)
+        demoji_sentence = pre_proc.remove_emojii(orig_sentance)
         # 如果上述程序處理完已經變成空字串則直接跳過
         if len(demoji_sentence.strip()) == 0:
             continue
         # 移除 HTML Tag
-        notag_sentance = remove_htmltag(demoji_sentence)
+        notag_sentance = pre_proc.remove_htmltag(demoji_sentence)
         # 移除 http, https url 連結
-        nolink_sentance = remove_link(notag_sentance)
+        nolink_sentance = pre_proc.remove_link(notag_sentance)
         # 移除標點符號
-        nopun_sentance = nolink_sentance.translate(
-            str.maketrans("", "", punctuation)
-        )
+        nopun_sentance = pre_proc.remove_punctuation(nolink_sentance)
         # 如果上述程序處理完已經變成空字串則直接跳過
         if len(nopun_sentance.strip()) == 0:
             continue
