@@ -42,7 +42,7 @@ class DataPreProcessing:
         Returns:
             str: 處理過句子
         """
-        return sentance.rreplace("\u200b", "")
+        return sentance.replace("\u200b", "")
 
     def remove_emojii(self, sentance: str) -> str:
         """
