@@ -32,6 +32,18 @@ class DataPreProcessing:
         """
         return sentance.replace("　", "")
 
+    def remove_zerowidth_space(self, sentance: str) -> str:
+        """
+        去除零長度的空白
+
+        Args:
+            sentance (str): 句子
+
+        Returns:
+            str: 處理過句子
+        """
+        return sentance.rreplace("\u200b", "")
+
     def remove_emojii(self, sentance: str) -> str:
         """
         移除文字中的 emojii

@@ -116,6 +116,8 @@ if __name__ == "__main__":
             orig_sentance = pre_proc.remove_eol(orig_sentance)
             # 移除全形空白
             orig_sentance = pre_proc.remove_fullwidth_space(orig_sentance)
+            # 移除零長度空白
+            orig_sentance = pre_proc.remove_zerowidth_space(orig_sentance)
             # 移除 emojii
             demoji_sentence = pre_proc.remove_emojii(orig_sentance)
             # 如果上述程序處理完已經變成空字串則直接跳過
